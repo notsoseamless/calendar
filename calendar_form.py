@@ -1,21 +1,15 @@
+'''
+Script to generate a calendar
+'''
 
 
-#import pyPdf
-import time
-import datetime as dt
+
 import calendar
-import re
-import StringIO
 from reportlab.lib import colors
-from reportlab.lib import utils
 from reportlab.lib.pagesizes import landscape, A4
-from reportlab.platypus import (Image, SimpleDocTemplate, Paragraph, Spacer)
-from reportlab.lib.styles import getSampleStyleSheet
-from reportlab.lib.units import inch, mm
-from reportlab.pdfgen import canvas
+from reportlab.lib.units import inch
 from reportlab.lib.pagesizes import A4, inch, landscape
-from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph
-from reportlab.lib.styles import getSampleStyleSheet
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle 
 from calendar_data import CalData
  
 
@@ -31,16 +25,16 @@ MONTHS            = ['blank', 'January', 'Febuary', 'March', 'April', 'May', 'Ju
 def main():
     ''' the main function '''
     first_day_of_week = START_DAY # Monday
-    data = calendar_data()
+    data = CalendarData()
     month = 4
 
-    # invoke month class
-    jan = calendar_grid(YEAR, month, data, first_day_of_week) 
-    jan()
+    for month in range(1,13):
+        CalendarGrid(YEAR, month, data, first_day_of_week) 
+
     
-class calendar_grid:
+class CalendarGrid(object):
     '''
-    Class:          calendar_grid
+    Class:          CalendarGrid
     Description:    represents a month
     Requirements:   None
     '''
@@ -61,13 +55,16 @@ class calendar_grid:
         self._year = year
         self._month = month
         self._elements = []
-        self._doc = SimpleDocTemplate(CALENDER_FILE, pagesize=landscape(A4), rightMargin=0, leftMargin=0, topMargin=20, bottomMargin=0)
+        out_file = 'Calendar_' + MONTHS[self._month] + '_' + str(year) + '.pdf'
+        self._doc = SimpleDocTemplate(out_file, pagesize=landscape(A4), rightMargin=0, leftMargin=0, topMargin=20, bottomMargin=0)
         # invoke calender class calc
         self.cal = calendar
         self.cal.setfirstweekday(FIRST_DAY_OF_WEEK)
-    def __call__(self):
-        ''' call method '''
+        self._week_data = None
+        self._week = None
+        self._title = None
         self.make_month()
+
     def _make_title(self):
         '''
         Method:         _make_title
@@ -75,13 +72,16 @@ class calendar_grid:
         Returns:        None
         Description:    Sets up the month name followed by the year.
         '''
-        self._title=Table([[MONTHS[self._month] + ' ' + str(self._year)]])
+        title_str = MONTHS[self._month] + ' ' + str(self._year)
+        self._title=Table([[title_str]], 1*[5*inch], 1*[0.5*inch])
         self._title.setStyle(TableStyle([('ALIGN',    (0,0), (0,0), 'CENTRE'),
-                                         ('VALIGN',   (0,0), (0,0), 'MIDDLE'),
-                                         ('TEXTCOLOR',(0,0), (0,0), colors.blue),
                                          ('VALIGN',   (0,0), (0,0), 'TOP'),
-                                         ('FONTSIZE', (0,0), (0,0), 15),
+                                         ('TEXTCOLOR',(0,0), (0,0), colors.blue),
+                                         ('BOX',      (0,0), (0,0), 0.25, colors.white),
+                                         ('VALIGN',   (0,0), (0,0), 'TOP'),
+                                         ('FONTSIZE', (0,0), (0,0), 25),
                                         ]))
+
     def _make_day_headers(self, first_day=0):
         '''
         Method:         _make_day_headers
@@ -97,14 +97,16 @@ class calendar_grid:
         days = [[day_set[(day_pointer + day_of_week) % days_in_week] for day_of_week in range(days_in_week)]]
         # set up the day header table
         self._week = Table(days,7*[1.5*inch], 1*[0.25*inch])
-        self._week.setStyle(TableStyle([('ALIGN' ,(0,0),(-1,-1), 'CENTRE'),
-                                        ('VALIGN',(0,0),(-1,-1), 'MIDDLE'),
-                                        ('INNERGRID', (0,0), (-1,-1), 0.25, colors.blue),
+        self._week.setStyle(TableStyle([('ALIGN' ,     (0,0), (-1,-1), 'CENTRE'),
+                                        ('VALIGN',     (0,0), (-1,-1), 'MIDDLE'),
+                                        ('INNERGRID',  (0,0), (-1,-1), 0.25, colors.blue),
                                         ('BACKGROUND', (0,0), (-1,-1), colors.blue),
-                                        ('BOX', (0,0), (-1,-1), 0.25, colors.blue),
-                                        ('TEXTCOLOR', (0,0),(-1,-1), colors.white),
-                                        ('FONTSIZE', (0,0),(-1,-1), 14),
+                                        ('BOX',        (0,0), (-1,-1), 0.25, colors.blue),
+                                        ('TEXTCOLOR',  (0,0), (-1,-1), colors.white),
+                                        ('FONTSIZE',   (0,0), (-1,-1), 14),
                                        ]))
+
+        
     def _make_data(self):
         '''
         Method:         _make_data
@@ -113,13 +115,13 @@ class calendar_grid:
         Description:    produce data for each day of the month, if it exists.
         '''
         blank_days = calendar.monthrange(self._year, self._month)[0]
-	days_in_month = calendar.monthrange(self._year, self._month)[1]
+        days_in_month = calendar.monthrange(self._year, self._month)[1]
         days_in_week  = 7
         date  = - blank_days
-	if days_in_month + blank_days > (days_in_week * 5):
-	    weeks_in_month = 6
-	else:
-	    weeks_in_month = 5
+        if days_in_month + blank_days > (days_in_week * 5):
+	        weeks_in_month = 6
+        else:
+            weeks_in_month = 5
 
         data = []
         data.append(self._build_week(date))
@@ -127,16 +129,18 @@ class calendar_grid:
         data.append(self._build_week(date + days_in_week * 2))
         data.append(self._build_week(date + days_in_week * 3))
         data.append(self._build_week(date + days_in_week * 4))
-	if 6 == weeks_in_month:
-        	data.append(self._build_week(date + days_in_week * 5))
+
+        if 6 == weeks_in_month:
+            data.append(self._build_week(date + days_in_week * 5))
         # output to table 
-        self._week_data=Table(data,7*[1.5*inch], weeks_in_month*[1.1*inch])
-        self._week_data.setStyle(TableStyle([('ALIGN' ,(0,0),(-1,-1),'RIGHT'),
-                                             ('VALIGN',(0,0),(-1,-1),'TOP'),
-                                             ('INNERGRID', (0,0), (-1,-1), 0.25, colors.blue),
-                                             ('TEXTCOLOR', (0,0),(-1,-1), colors.blue),
-                                             ('BOX', (0,0), (-1,-1), 0.25, colors.blue),
-                                             ('FONTSIZE', (0,0),(-1,-1), 13),
+        self._week_data=Table(data,7*[1.5*inch], weeks_in_month*[1.0*inch])
+        self._week_data.setStyle(TableStyle([('ALIGN' ,     (0,0), (-1,-1), 'RIGHT'),
+                                             ('VALIGN',     (0,0), (-1,-1), 'TOP'),
+                                             ('INNERGRID',  (0,0), (-1,-1), 0.25, colors.blue),
+                                             ('BACKGROUND', (5,0), (-1,-1), colors.lavender),
+                                             ('TEXTCOLOR',  (0,0), (-1,-1), colors.blue),
+                                             ('BOX',        (0,0), (-1,-1), 0.25, colors.blue),
+                                             ('FONTSIZE',   (0,0), (-1,-1), 13),
                                             ]))
     def _build_week(self, date):
         ''' 
@@ -176,13 +180,12 @@ class calendar_grid:
         self._doc.build(self._elements)
 
 
-class calendar_data:
+class CalendarData(object):
     '''
-    Class:          calendar_data
+    Class:          CalendarData
     Description:    Represents calendar data container
     Requirements:   None
     '''
-    '''  '''
     def __init__(self):
         '''
         Method:         __init__
@@ -193,9 +196,10 @@ class calendar_data:
         # import data from cal_data
         # instanciate CalData object and import date data
         cal_data = CalData()
-        self._birthdays = cal_data.get_birthdays()
-        self._aniversaries = cal_data.get_aniversaries()
-        self._appointments = cal_data.get_appointments()
+        self._birthdays    = cal_data.birthdays
+        self._aniversaries = cal_data.aniversaries
+        self._appointments = cal_data.appointments
+        self._bank_days    = cal_data.bank_days
     def get(self, month, day):
         '''
         Method:         get
@@ -203,24 +207,24 @@ class calendar_data:
         Returns:        The compiled data.
         Description:    getter compiles birthdays, anivarsaries and appointments for a given month-day.
         '''
-        results = []
-        # birthdays:
-        month_list = filter(lambda month_list: str(month) == month_list['month'], self._birthdays)
-        day_list =   filter(lambda day_list: str(day) == day_list['day'], month_list)
-	years = lambda Yr : ' (' + str(YEAR - Yr) + ')\n' if Yr > 0  else '\n'
-        for people in day_list:
-            results.append('B: ' + people['name'] + years(people['year']))
-        # aniversaries:
-        month_list = filter(lambda month_list: str(month) == month_list['month'], self._aniversaries)
-        day_list =   filter(lambda day_list: str(day) == day_list['day'], month_list)
-        for people in day_list:
-            results.append('A: ' + people['name'] + ' (' +  str(YEAR - people['year']) + ')\n')
-        # appointments
-        month_list = filter(lambda month_list: str(month) == month_list['month'], self._appointments)
-        day_list =   filter(lambda day_list: str(day) == day_list['day'], month_list)
-        for people in day_list:
-            results.append(people['name'] + '\n')
+        results =  self._sort_date_lists(month, day, self._bank_days)
+        results += self._sort_date_lists(month, day, self._birthdays)
+        results += self._sort_date_lists(month, day, self._aniversaries)
+        results += self._sort_date_lists(month, day, self._appointments)
         return results
+
+    def _sort_date_lists(self, month, day, list_to_sort):
+        '''
+        Method:         sort_date_lists
+        Parameters:     Month and day
+        Returns:        The compiled data.
+        Description:    gets month then day data from list_to_sort.
+        '''
+        years = lambda Yr : ' (' + str(YEAR - Yr) + ')\n' if Yr > 0  else '\n'
+        month_list = filter(lambda month_list: str(month) == month_list['month'], list_to_sort)
+        day_list =   filter(lambda day_list: str(day) == day_list['day'], month_list)
+        return [data['name'] + years(data['year']) + '\n' for data in day_list]
+
 
 
 if __name__ == '__main__':
