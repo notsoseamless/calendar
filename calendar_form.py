@@ -8,7 +8,7 @@ import calendar
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import A4, inch, landscape
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle
-from calendar_dataP import CalData
+from calendar_data import CalData
 
 
 # constants
@@ -140,8 +140,7 @@ def build_week(month, date):
             if date > 0:
                 day_data = get_calendar_data(month, date)
                 day_data_str = [''.join(str(day_dat + '\n')) for day_dat in day_data]
-                print ''.join(day_data_str)
-                week.append(''.join(str(date) + '\n' + ''.join((day_data_str)) ))
+                week.append(''.join(str(date) + '\n' + ''.join((day_data_str))))
             else:
                 week.append('')
         else:
