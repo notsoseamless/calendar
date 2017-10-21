@@ -8,14 +8,14 @@ import calendar
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import A4, inch, landscape
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle
-from calendar_data import CalData
+from calendar_dataP import CalData
 
 
 # constants
 YEAR = 2018
 DAYS_IN_WEEK = 7
 START_DAY = 0 #Calendar starting day, default of 0 means Monday, 2 Tuesday, etc
-MONTHS = ['blank', 'January', 'Febuary', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'Decemeber']
+MONTHS = ['blank', 'January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'Decemeber']
 
 
 
@@ -108,9 +108,9 @@ def make_data(month):
     data.append(build_week(month, date + DAYS_IN_WEEK * 2))
     data.append(build_week(month, date + DAYS_IN_WEEK * 3))
     data.append(build_week(month, date + DAYS_IN_WEEK * 4))
-
     if 6 == weeks_in_month:
         data.append(build_week(month, date + DAYS_IN_WEEK * 5))
+
     # output to table
     week_data = Table(data, 7*[1.5*inch], weeks_in_month*[1.0*inch])
     week_data.setStyle(TableStyle([('ALIGN', (0, 0), (-1, -1), 'RIGHT'),
@@ -139,8 +139,9 @@ def build_week(month, date):
             date += 1
             if date > 0:
                 day_data = get_calendar_data(month, date)
-                day_data_str = [day_dat for day_dat in day_data]
-                week.append(str(date) + '\n' + str(day_data_str).strip("[],'"))
+                day_data_str = [''.join(str(day_dat + '\n')) for day_dat in day_data]
+                print ''.join(day_data_str)
+                week.append(''.join(str(date) + '\n' + ''.join((day_data_str)) ))
             else:
                 week.append('')
         else:
