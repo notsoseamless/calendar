@@ -9,7 +9,7 @@ import time
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import A4, inch, landscape
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle
-from calendar_data_dev import CalData
+from calendar_data import CalData
 
 
 # constants
