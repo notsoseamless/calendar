@@ -41,6 +41,7 @@ class CalData(object):
         Returns:        None
         Description:    builds the aniversaries for a year.
         '''
+        self._aniversaries.append({'month':'1', 'day':'1',  'name':'test', 'year':2014})
         self._aniversaries.append({'month':'1', 'day':'27', 'name':'test', 'year':2014})
         self._aniversaries.append({'month':'1', 'day':'20', 'name':'test', 'year':0})
     def _build_appointment(self):

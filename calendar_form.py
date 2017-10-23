@@ -5,10 +5,11 @@ Script to generate a calendar
 
 
 import calendar
+import time
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import A4, inch, landscape
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle
-from calendar_data import CalData
+from calendar_data_dev import CalData
 
 
 # constants
@@ -17,8 +18,18 @@ DAYS_IN_WEEK = 7
 START_DAY = 0 #Calendar starting day, default of 0 means Monday, 2 Tuesday, etc
 MONTHS = ['blank', 'January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'Decemeber']
 
+def timing_function_decorator(timed_function):
+    ''' Outputs time a function takes to execute '''
+    def wrapper():
+        ''' wrapper '''
+        t_start = time.time()
+        timed_function()
+        t_end = time.time()
+        return "Script ran for " + str((t_end - t_start)) + " seconds\n"
+    return wrapper
 
 
+@timing_function_decorator
 def main():
     ''' the main function '''
     for month in range(1, 13):
@@ -190,7 +201,7 @@ def delta_years(year):
         return ''
 
 
+
 if __name__ == '__main__':
-    main()
-print "PDF created!"
+    print main()
 
