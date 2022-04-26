@@ -13,7 +13,7 @@ from calendar_data import CalData
 
 
 # constants
-YEAR = 2018
+YEAR = 2022
 DAYS_IN_WEEK = 7
 START_DAY = 0 #Calendar starting day, default of 0 means Monday, 2 Tuesday, etc
 MONTHS = ['blank', 'January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'Decemeber']
